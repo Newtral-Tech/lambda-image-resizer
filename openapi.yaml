@@ -1,0 +1,115 @@
+openapi: 3.0.0
+info:
+  title: Image Resizer Service
+  description: Service that upload and resize image
+  version: 1.0.0
+tags:
+  - name: image
+    description: Operation about images
+paths:
+  '/':
+    post:
+      tags:
+        - image
+      summary: Upload and resize and image
+      description: Uploads and resize and image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadImageRequest'
+          image/png:
+            schema:
+              $ref: '#/components/schemas/Binary'
+          image/jpg:
+            schema:
+              $ref: '#/components/schemas/Binary'
+          image/jpeg:
+            schema:
+              $ref: '#/components/schemas/Binary'
+          image/gif:
+            schema:
+              $ref: '#/components/schemas/Binary'
+          image/svg+xml:
+            schema:
+              $ref: '#/components/schemas/Binary'
+          image/webp:
+            schema:
+              $ref: '#/components/schemas/Binary'
+      parameters:
+        - name: resizeTo
+          in: query
+          description: When the request is a binary upload the resize field can be set via query string parameter
+          schema:
+            type: number
+            minimum: 128
+            maximum: 1920
+            exclusiveMinimum: true
+            exclusiveMaximum: true
+            example: 128
+            default: 128
+
+      responses:
+        200:
+          description: Image successfully resized and uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadImageResponse'
+
+components:
+  schemas:
+    UploadImageRequest:
+      type: object
+      title: UploadImageRequest
+      properties:
+        image:
+          type: string
+          format: binary
+          description: The image file to be uploaded
+        resizeTo:
+          type: number
+          description: The resize size. The image is resize to fit inside a square of the given size keeping aspect ratio
+          minimum: 128
+          example: 128
+      required:
+        - image
+    UploadImageResponse:
+      type: object
+      title: UploadImageResponse
+      description: An object containing the URL of the uploaded image
+      properties:
+        location:
+          type: string
+          format: uri
+          description: The url where the image is located at
+          example: https://api.example.com/images/image.png
+        thumbnails:
+          type: array
+          description: List of already generated thumbails
+          items:
+            $ref: '#/components/schemas/Thumbnail'
+      required:
+        - location
+    Binary:
+      type: string
+      format: binary
+    Thumbnail:
+      type: object
+      title: Thumbnail
+      properties:
+        location:
+          type: string
+          format: uri
+          description: >
+            The url where the thumbnail is located at.
+            The same url as the original image with the size of the thumbnail appended at the end of the url
+          example: https://api.example.com/images/image.png
+        size:
+          type: integer
+          description: Size in pixels for this thumbnail
+          example: 96
+      required:
+        - location
+        - size

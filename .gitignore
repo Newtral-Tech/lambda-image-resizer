@@ -1,0 +1,11 @@
+/dist/
+/node_modules/
+/reports/
+*.log
+/*.tgz
+.env
+.env.*
+
+
+# Serverless directories
+.serverless

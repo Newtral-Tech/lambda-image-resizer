@@ -1,0 +1,59 @@
+service: lambda-image-resizer
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+  # you can overwrite defaults here
+  stage: dev
+  region: eu-west-1
+
+  environment:
+    SERVERLESS_ENV: ${opt:stage, 'dev'}
+
+  apiGateway:
+    apiKeySourceType: HEADER
+    binaryMediaTypes:
+      - '*/*'
+
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource: arn:aws:s3:::lambda-image-resizer/*
+  exclude:
+    - .idea/**
+    - .git/**
+    - .vscode/**
+    - .eslintrc
+    - .gitignore
+    - .huskyrc
+    - .lintstagedrc
+    - .prettierignore
+    - .prettierrc
+    - .serverless/**
+    - reports/**
+    - src/**
+    - test/**
+    - package-lock.json
+    - package.json
+    - README.md
+    - tsconfig.json
+
+functions:
+  uploadImage:
+    private: true
+    handler: dist/handlers/uploadImage.default
+    events:
+      - http:
+          cors: true
+          path: /
+          method: post
+  showUploadForm:
+    private: true
+    handler: dist/handlers/showUploadForm.default
+    events:
+      - http:
+          path: /
+          method: get
