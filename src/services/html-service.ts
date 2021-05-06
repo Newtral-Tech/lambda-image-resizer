@@ -69,7 +69,7 @@ export async function parseFormRequest(event: APIGatewayEvent): Promise<ResizeAn
       headers['content-length'] = body.length;
     }
 
-    const form = new IncomingForm({ hash: 'sha256' } as any);
+    const form = new IncomingForm({ hash: 'sha256', multiples: false });
     const stream = new Readable();
 
     stream.push(body, 'base64');
@@ -83,7 +83,7 @@ export async function parseFormRequest(event: APIGatewayEvent): Promise<ResizeAn
         return;
       }
 
-      if (!allowedTypes.includes(file.type)) {
+      if (!file.type || !allowedTypes.includes(file.type)) {
         stream.emit('error', new BadRequestError(`Mime type "${file.type}" not allowed. Must be one of ${allowedTypes.join(', ')}`));
         return;
       }
@@ -110,16 +110,18 @@ export async function parseFormRequest(event: APIGatewayEvent): Promise<ResizeAn
         return;
       }
 
-      if (!files.image) {
+      const image = files.image as File; // { multiples: false } makes this a single file
+
+      if (!image) {
         reject(new BadRequestError('Missing required form field "image"'));
         return;
       }
 
       resolve({
         size: parseResizeTo(fields.resizeTo as string),
-        imageMimeType: files.image.type,
-        imageName: files.image.hash!,
-        imagePath: files.image.path
+        imageMimeType: image.type as string, // There is a previous check for valid mime types
+        imageName: image.hash!,
+        imagePath: image.path
       });
     });
   });
